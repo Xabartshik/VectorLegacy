@@ -636,7 +636,7 @@ public:
 
         return m_data[m_size - 1];
     }
-
+    //Ссылка на первый элемент 
     T& data() {
         if (m_size == 0) {
             throw std::out_of_range("Vector is empty");
@@ -644,12 +644,12 @@ public:
 
         return m_data[0];
     }
-
+    //Указатель на начало массива
     const T* begin() const {
         return m_data;
     }
 
-
+    //Указатель на конец массива
     const T* end() const {
         return m_data + m_size;
     }
@@ -675,7 +675,7 @@ public:
         }
         sorted = true;
     }
-
+    //Слияние массивов
     void merge(size_t left, size_t mid, size_t right) {
         // Проверка корректности индексов
         if (left > mid || mid > right) {
@@ -714,7 +714,7 @@ public:
         // Обновление флага сортировки
         sorted = false;
     }
-
+    //Сортировка слиянеим
     void sort_merge(size_t left, size_t right) {
         if (left < right) {
             size_t mid = (left + right) / 2;
@@ -724,6 +724,7 @@ public:
         }
         sorted = true;
     }
+    //Сортировка. Если меньше миллиона значений, то быстрая, иначе слиянием
     void sort()
     {
         if (size() < 1000000)
