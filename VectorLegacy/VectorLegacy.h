@@ -1,9 +1,11 @@
 #pragma once
 #include <algorithm>
+#include <sstream>
 #include <iostream>
 #include <list>
 #include <windows.h>
 #include <stdlib.h>
+#include <cassert>
 /*
 Memcpy vs. copy_n:
 Memcpy:
@@ -145,7 +147,7 @@ private:
 
     size_t partition(size_t low, size_t high) {
         // Выбор опорного элемента
-        size_t pivot_index = low + rand() % (high - low);
+        size_t pivot_index = low + rand() % (high - low + 1);
 
         T pivot = m_data[pivot_index];
         std::swap(m_data[pivot_index], m_data[high]);
@@ -195,8 +197,8 @@ public:
     // Конструктор с указанием размера. Если не указать, каким значением заполнять, заполнится 0
     VectorLegacy(size_t n, const T& value = 0) {
         m_size = n;
-        m_capacity = n;
-        m_data = new T[n];
+        m_capacity = n*2;
+        m_data = new T[m_capacity];
         for (size_t i = 0; i < n; ++i) {
             m_data[i] = value;
         }
@@ -243,8 +245,8 @@ public:
             m_capacity = other.m_capacity;
             sorted = other.sorted;
             m_data = new T[m_capacity];
-            copy_n(other.m_data, other.m_size, m_data, other.m_size);
-            //memcpy(m_data, other.m_data, other.m_size * sizeof(T));
+            //copy_n(other.m_data, other.m_size, m_data, other.m_size);
+            memcpy(m_data, other.m_data, other.m_size * sizeof(T));
         }
         return *this;
     }
@@ -288,8 +290,8 @@ public:
         sorted = other.sorted;
         m_capacity = other.m_size;
         m_data = new T[m_capacity];
-        copy_n(other.m_data, other.m_size, m_data, other.m_size);
-        //memcpy(m_data, other.m_data, m_size * sizeof(T));
+        //copy_n(other.m_data, other.m_size, m_data, other.m_size);
+        memcpy(m_data, other.m_data, m_size * sizeof(T));
     }
     //Обмен массивов местами
     void swap(VectorLegacy& other) {
@@ -333,6 +335,22 @@ public:
         }
     }
 //----------------------------------------------------------------------------------------
+
+    bool operator==(const VectorLegacy<T>& other) const 
+    {
+        if (m_size != other.m_size) {
+            return false;
+        }
+
+        for (size_t i = 0; i < m_size; ++i) {
+            if (m_data[i] != other.m_data[i]) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     // Доступ к элементам через []
     T& operator[](size_t index) {
         if (index > m_size)
@@ -439,8 +457,8 @@ public:
         }
 
         // Копирование данных из array
-        copy_n(array, count, m_data + index, count);
-        //memcpy(m_data + index, array, count * sizeof(T));
+        //copy_n(array, count, m_data + index, count);
+        memcpy(m_data + index, array, count * sizeof(T));
         m_size = new_size;
         sorted = false;
     }
@@ -513,7 +531,7 @@ public:
     }
 
     // Конвертация массива в строку
-    string to_string() const {
+    std::string to_string() const {
         stringstream ss;
         ss << "[";
         for (size_t i = 0; i < m_size; ++i) {
@@ -670,7 +688,7 @@ public:
             size_t pi = partition(low, high);
 
             // Рекурсивно отсортировать левый и правый подмассивы
-            sort_quick(low, pi - 1);
+            sort_quick(low, pi);
             sort_quick(pi + 1, high);
         }
         sorted = true;
@@ -729,11 +747,11 @@ public:
     {
         if (size() < 1000000)
         {
-            sort_quick(0, size());
+            sort_quick(0, size()-1);
         }
         else
         {
-            sort_merge(0, size());
+            sort_merge(0, size()-1);
         }
         sorted = true;
     }
@@ -741,4 +759,166 @@ public:
 };
 
 //Процедура тестирования
-void test();
+void test() {
+    // Тестирование конструкторов
+    VectorLegacy<int> v1;
+    assert(v1.size() == 0);
+    assert(v1.capacity() == 0);
+    assert(v1.empty());
+
+    VectorLegacy<int> v2(5);
+    assert(v2.size() == 5);
+    assert(v2.capacity() == 10);
+    assert(!v2.empty());
+    for (int i = 0; i < 5; ++i) {
+        assert(v2[i] == 0);
+    }
+
+    VectorLegacy<int> v3({ 1, 2, 3, 4, 5 });
+    assert(v3.size() == 5);
+    assert(v3.capacity() == 5);
+    assert(!v3.empty());
+    for (int i = 0; i < 5; ++i) {
+        assert(v3[i] == i + 1);
+    }
+
+    VectorLegacy<int> v4(v3);
+    assert(v4.size() == 5);
+    assert(v4.capacity() == 5);
+    assert(!v4.empty());
+    for (int i = 0; i < 5; ++i) {
+        assert(v4[i] == i + 1);
+    }
+
+    // Тестирование операторов присваивания
+    v1 = v2;
+    assert(v1.size() == 5);
+    assert(v1.capacity() == 10);
+    assert(!v1.empty());
+    for (int i = 0; i < 5; ++i) {
+        assert(v1[i] == 0);
+    }
+
+    v1 = { 1, 2, 3, 4, 5 };
+    assert(v1.size() == 5);
+    assert(v1.capacity() == 10);
+    assert(!v1.empty());
+    for (int i = 0; i < 5; ++i) {
+        assert(v1[i] == i + 1);
+    }
+
+    // Тестирование метода push_back
+    v1.push_back(6);
+    assert(v1.size() == 6);
+    assert(v1.capacity() == 10);
+    assert(v1[5] == 6);
+
+    // Тестирование метода pop_back
+    v1.pop_back();
+    assert(v1.size() == 5);
+    assert(v1.capacity() == 10);
+    assert(v1[4] != 6);
+
+    // Тестирование метода push_front
+    v1.push_front(0);
+    assert(v1.size() == 6);
+    assert(v1.capacity() == 10);
+    assert(v1[0] == 0);
+
+    // Тестирование метода pop_front
+    v1.pop_front();
+    assert(v1.size() == 5);
+    assert(v1.capacity() == 10);
+    assert(v1[0] != 0);
+
+    // Тестирование метода insert
+    v1.insert(2, 10);
+    assert(v1.size() == 6);
+    assert(v1.capacity() == 10);
+    assert(v1[2] == 10);
+
+    // Тестирование метода insert (массив)
+    int arr[] = { 11, 12, 13 };
+    v1.insert(4, arr, 3);
+    assert(v1.size() == 9);
+    assert(v1.capacity() == 10);
+    assert(v1[4] == 11);
+    assert(v1[5] == 12);
+    assert(v1[6] == 13);
+
+    // Тестирование метода insert (список)
+    list<int> l = { 14, 15, 16 };
+    v1.insert(7, l);
+    assert(v1.size() == 12);
+    assert(v1.capacity() == 24);
+    assert(v1[7] == 14);
+    assert(v1[8] == 15);
+    assert(v1[9] == 16);
+
+    // Тестирование метода clear
+    v1.clear();
+    assert(v1.size() == 0);
+    assert(v1.capacity() == 24);
+    assert(v1.empty());
+
+    // Тестирование метода delete_
+    v1 = { 1, 2, 3, 4, 5 };
+    v1.delete_(2);
+    assert(v1.size() == 4);
+    assert(v1.capacity() == 10);
+    assert(v1[2] == 4);
+
+    // Тестирование метода delete_ (диапазон)
+    v1.delete_(1, 2);
+    assert(v1.size() == 2);
+    assert(v1.capacity() == 10);
+    assert(v1[1] == 5);
+
+    // Тестирование метода print
+    v1.print(); // Выведет: "1 5"
+
+    // Тестирование метода to_string
+    string s = v1.to_string();
+    assert(s == "[1, 5]");
+
+    // Тестирование метода at
+    assert(v1.at(0) == 1);
+    assert(v1.at(1) == 5);
+
+    // Тестирование метода swap
+    v1.swap(0, 1);
+    assert(v1.at(0) == 5);
+    assert(v1.at(1) == 1);
+
+    // Тестирование метода seek_interpol
+    v1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    assert(v1.seek_interpol(5) == 4);
+    assert(v1.seek_interpol(11) == 10);
+
+    // Тестирование метода seek_sequentional
+    assert(v1.seek_sequentional(5) == 4);
+    assert(v1.seek_sequentional(11) == 10);
+
+    // Тестирование метода sort_insertion
+    v1 = { 5, 3, 1, 2, 4 };
+    v1.sort_insertion(0, 5);
+    assert(v1 == VectorLegacy<int>({ 1, 2, 3, 4, 5 }));
+
+    // Тестирование метода sort_quick
+    v1 = { 5, 3, 1, 2, 4 };
+    v1.sort_quick(0, 4);
+    assert(v1 == VectorLegacy<int>({ 1, 2, 3, 4, 5 }));
+
+    // Тестирование метода sort_merge
+    v1 = { 5, 3, 1, 2, 4 };
+    v1.sort_merge(0, 4);
+    assert(v1 == VectorLegacy<int>({ 1, 2, 3, 4, 5 }));
+
+    // Тестирование метода sort
+    v1 = { 5, 3, 1, 2, 4 };
+    v1.sort();
+    v1.print();
+    assert(v1 == VectorLegacy<int>({ 1, 2, 3, 4, 5 }));
+
+    cout << "All tests passed!" << endl;
+}

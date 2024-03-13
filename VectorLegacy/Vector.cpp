@@ -2,6 +2,7 @@
 #include <vector>
 int main() 
 {
+	test();
 	VectorLegacy<int> arr(5,1);
 
 	VectorLegacy<int> arr2(5, 1);
@@ -29,7 +30,7 @@ int main()
 	arr.print();
 
 
-	arr = {1, 2, 7, 4, 8, 6, 7, 9};
+	arr = {1, 2, 7, 4, 8, 1, 3, 54, 12, 78, 1, -5, 3, 4, 7};
 	cout << arr.seek(4) << endl;
 	arr.sort();
 	for (size_t i = 0; i < arr.size() - 1; i++) {
@@ -38,6 +39,7 @@ int main()
 		}
 	}
 	cout << "Заебца" << endl;
+	arr.print();
 	return 0;
 
 }
