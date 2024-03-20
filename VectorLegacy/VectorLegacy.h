@@ -63,7 +63,7 @@ private:
     // Указатель на массив
     T* m_data;
     // Сортирован ли массив?
-    bool sorted;
+    bool m_sorted;
     /*
     Используем функцию GlobalMemoryStatusEx из Windows API для получения информации о памяти.
     Проверяем, не возникла ли ошибка при получении информации о памяти.
@@ -81,11 +81,13 @@ private:
         return ms.ullAvailPhys; // Возвращает количество свободной памяти в указанном типе данных
     }
 
+
     // Функция для увеличения вместимости массива
     void resize(size_t new_capacity) {
         T* new_data = new T[new_capacity];
         //memcpy(new_data, m_data, m_size * sizeof(T));
-        copy_n(m_data, m_size, new_data);
+        //copy_n(m_data, m_size, new_data);
+        copy(begin(), end(), new_data);
         delete[] m_data;
         m_data = new_data;
         m_capacity = new_capacity;
@@ -100,7 +102,10 @@ private:
 
         // Вычисляем 5% от размера оперативной памяти
         size_t memory_limit = free_memory / 100;
-
+        if (m_capacity == 0)
+        {
+            m_capacity = 2;
+        }
         // Увеличиваем вместимость в 2 раза
         size_t new_capacity = m_capacity * 2;
 
@@ -112,7 +117,8 @@ private:
 
         T* new_data = new T[new_capacity];
         //Перенос информации
-        copy_n(m_data, m_size, new_data);
+        //copy_n(m_data, m_size, new_data);
+        copy(begin(), end(), new_data);
         //memcpy(new_data, m_data, m_size * sizeof(T));
         delete[] m_data;
         m_data = new_data;
@@ -171,6 +177,22 @@ private:
         return i + 1;
     }
 
+
+    //Проверка сортированности массива по возрастанию.
+    bool isSorted()
+    {
+        for (size_t i = 1; i < m_size; i++)
+        {
+            if (m_data[i] < m_data[i - 1])
+            {
+                m_sorted = false;
+                return m_sorted;
+            }
+        }
+        m_sorted = true;
+        return m_sorted;
+    }
+
 public:
 //-----------------------------------ПРАВИЛО ПЯТИ--------------------------------
     // Конструктор по умолчанию
@@ -178,7 +200,7 @@ public:
         m_size = 0;
         m_capacity = 0;
         m_data = nullptr;
-        sorted = false;
+        m_sorted = false;
     }
 
 
@@ -188,8 +210,10 @@ public:
         m_size = list.size();
         m_capacity = m_size;
         m_data = new T[m_size];
-        copy_n(list.begin(), m_size, m_data);
-        sorted = false;
+        //
+        copy(list.begin(), list.end(), m_data);
+        //copy_n(list.begin(), m_size, m_data);
+        m_sorted = isSorted();
         //memcpy(m_data, list.begin(), m_size * sizeof(T));
     }
 
@@ -202,7 +226,7 @@ public:
         for (size_t i = 0; i < n; ++i) {
             m_data[i] = value;
         }
-        sorted = false;
+        m_sorted = true;
     }
 
 
@@ -212,8 +236,9 @@ public:
         m_size = n;
         m_capacity = n;
         m_data = new T[n];
-        copy_n(data, n, m_data);
-        sorted = false;
+        //copy_n(data, n, m_data);
+        copy(data, data+n, m_data);
+        m_sorted = isSorted();
         //memcpy(m_data, data, n * sizeof(T));
     }
 
@@ -223,13 +248,14 @@ public:
         m_data = other.m_data;
         m_size = other.m_size;
         m_capacity = other.m_capacity;
-        sorted = other.sorted;
+        m_sorted = other.m_sorted;
 
         // Обнуление данных other
-        other.sorted = false;
-        other.m_data = nullptr;
-        other.m_size = 0;
-        other.m_capacity = 0;
+        //other.sorted = false;
+        //other.m_data = nullptr;
+        //other.m_size = 0;
+        //other.m_capacity = 0;
+        ~other;
     }
 
     //Оператор копирования
@@ -243,10 +269,11 @@ public:
             // Копирование данных
             m_size = other.m_size;
             m_capacity = other.m_capacity;
-            sorted = other.sorted;
+            m_sorted = other.m_sorted;
             m_data = new T[m_capacity];
             //copy_n(other.m_data, other.m_size, m_data, other.m_size);
-            memcpy(m_data, other.m_data, other.m_size * sizeof(T));
+            //memcpy(m_data, other.m_data, other.m_size * sizeof(T));
+            copy(other.begin(), other.end(), m_data);
         }
         return *this;
     }
@@ -263,6 +290,7 @@ public:
         m_data = new T[m_capacity];
         size_t i = 0;
         copy(list.begin(), list.end(), m_data);
+        m_sorted = isSorted();
         return *this;
     }
 
@@ -274,25 +302,23 @@ public:
             m_data = other.m_data;
             m_size = other.m_size;
             m_capacity = other.m_capacity;
-            sorted = other.sorted;
+            m_sorted = other.m_sorted;
 
-            other.sorted = false;
-            // Обнуление данных other
-            other.m_data = nullptr;
-            other.m_size = 0;
-            other.m_capacity = 0;
+            ~other;
         }
         return *this;
     }
     //Конструктор копирования
     VectorLegacy(const VectorLegacy<T>& other) {
         m_size = other.m_size;
-        sorted = other.sorted;
+        m_sorted = other.m_sorted;
         m_capacity = other.m_size;
         m_data = new T[m_capacity];
         //copy_n(other.m_data, other.m_size, m_data, other.m_size);
-        memcpy(m_data, other.m_data, m_size * sizeof(T));
+        //memcpy(m_data, other.m_data, m_size * sizeof(T));
+        copy(other.begin(), other.end(), m_data);
     }
+
     //Обмен массивов местами
     void swap(VectorLegacy& other) {
         if (this == &other) {
@@ -307,7 +333,7 @@ public:
         std::swap(m_data, other.m_data);
         std::swap(m_size, other.m_size);
         std::swap(m_capacity, other.m_capacity);
-        std::swap(sorted, other.sorted);
+        std::swap(m_sorted, other.m_sorted);
 
         // Обновление ссылок на `nullptr` для объектов, 
         // которые больше не владеют буфером данных
@@ -335,7 +361,7 @@ public:
         }
     }
 //----------------------------------------------------------------------------------------
-
+    //Оператор сравнения
     bool operator==(const VectorLegacy<T>& other) const 
     {
         if (m_size != other.m_size) {
@@ -383,16 +409,24 @@ public:
     size_t capacity() const {
         return m_capacity;
     }
+    
+    bool sorted() const
+    {
+        return m_sorted;
+    }
+
 //----------------------------------------------------------------Добавление и удаление элементов--------------------------------------------------
     // Добавление элемента в конец
+    // Средний: O(1)
+    // Худший: О(n)
     void push_back(const T& value) {
         if (m_size == m_capacity) {
             resize();
         }
         m_data[m_size++] = value;
-        sorted = false;
+        m_sorted = false;
     }
-
+    //Средний:  О(n)
     // Удаление элемента из конца
     T pop_back() {
         T result = m_data[m_size - 1];
@@ -404,7 +438,7 @@ public:
         }
         return result;
     }
-
+    //Средний: О(n)
     // Удаление первого элемента
     void pop_front() {
         if (m_size == 0) {
@@ -413,7 +447,7 @@ public:
         shift_left(0, 1);
         --m_size;
     }
-
+    //Средний: О(n)
     // Добавление элемента в начало
     void push_front(const T& value) {
         if (m_size == m_capacity) {
@@ -423,8 +457,10 @@ public:
         shift_right(0, 1);
         m_data[0] = value;
         m_size++;
-        sorted = false;
+        m_sorted = false;
     }
+    //Средний: О(n)
+    //Лучший: О(1)
     //Вставляет Value в Index
     void insert(size_t index, const T& value) {
         if (index > m_size) {
@@ -438,8 +474,10 @@ public:
         shift_right(index, 1);
         m_data[index] = value;
         m_size++;
-        sorted = false;
+        m_sorted = false;
     }
+    //Средний: О(n)
+    //     //Лучший: О(1)
     //Вставляет динамический массив в индекс
     void insert(size_t index, const T* array, size_t count) {
         if (index > m_size) {
@@ -448,7 +486,8 @@ public:
 
         size_t new_size = m_size + count;
         if (new_size > m_capacity) {
-            resize(new_size*2);
+            m_capacity = new_size * 2;
+            resize(m_capacity);
         }
 
         // Сдвиг элементов вправо
@@ -458,10 +497,13 @@ public:
 
         // Копирование данных из array
         //copy_n(array, count, m_data + index, count);
-        memcpy(m_data + index, array, count * sizeof(T));
+        //memcpy(m_data + index, array, count * sizeof(T));
+        copy(array, array+count, m_data+index);
         m_size = new_size;
-        sorted = false;
+        m_sorted = false;
     }
+    //Средний: О(n)
+    //     //Лучший: О(1)
     //Вставляет список в индекс
     void insert(size_t index, const list<T>& list) {
         if (index > m_size) {
@@ -470,7 +512,8 @@ public:
 
         size_t new_size = m_size + list.size();
         if (new_size > m_capacity) {
-            resize(new_size*2);
+            m_capacity = new_size * 2;
+            resize(m_capacity);
         }
 
         // Сдвиг элементов вправо
@@ -479,21 +522,24 @@ public:
         }
 
         // Копирование данных из list
-        copy_n(list.begin(), list.size(), m_data + index);
+        //copy_n(list.begin(), list.size(), m_data + index);
+        copy(list.begin(), list.end(), m_data + index);
         //memcpy нельзя использовать из-за отсутствия у него в параметрах list
         //memcpy(m_data + index, list.begin(), list.size() * sizeof(T));
         m_size = new_size;
-        sorted = false;
+        m_sorted = false;
     }
-
+    //Средний: О(n)
     // Очистка массива
     void clear() {
         for (size_t i = 0; i < m_size; ++i) {
             m_data[i] = 0;
         }
         m_size = 0;
-        sorted = false;
+        m_sorted = false;
     }
+    //Средний: О(n)
+    //     //Лучший: О(1)
     //Удаление элемента массива в индексе
     void delete_(size_t index) {
         if (index >= m_size) {
@@ -507,6 +553,8 @@ public:
 
         --m_size;
     }
+    //Средний: О(n)
+    //     //Лучший: О(1)
     //Удаление по диапазону
     void delete_(size_t index, size_t count) {
         if (index + count > m_size) {
@@ -529,7 +577,7 @@ public:
         }
         cout << endl;
     }
-
+    //Средний: О(n)
     // Конвертация массива в строку
     std::string to_string() const {
         stringstream ss;
@@ -551,7 +599,7 @@ public:
             throw out_of_range("Tried to access to index out of range (array size)");
         }
         return m_data[index];
-        sorted = false;
+        m_sorted = false;
     }
     // Доступ к элементу по индексу (только чтение)
     const T& at(size_t index) const {
@@ -572,13 +620,14 @@ public:
         // Обмен значениями элементов
         m_data[index1] = m_data[index2];
         m_data[index2] = temp;
-        sorted = false;
+        m_sorted = false;
     }
+    //Средний: О(log(log(n))
     //Поиск value интеополяционно. Сортирует массив по возрастанию, если он не отсортирован
     size_t seek_interpol(const T& value) {
-        if (!sorted)
+        if (!m_sorted)
         {
-
+            throw std::runtime_error("Array is not sorted");
         }
 
         if (m_size == 0  || m_data[0] > value  || m_data[m_size - 1] < value) {
@@ -604,6 +653,7 @@ public:
 
         return m_size;
     }
+    //Средний: О(n)
     //Последовательный поиск
     size_t seek_sequentional(const T& value) const {
         for (size_t i = 0; i < m_size; ++i) {
@@ -617,7 +667,7 @@ public:
     //Сортировать массив пользователя без спроса -- плохая идея.
     size_t seek(const T& value)
     {
-        if (!sorted)
+        if (!m_sorted)
         {
             return seek_sequentional(value);
         }
@@ -627,7 +677,7 @@ public:
         }
             
     }
-
+    //Средний, Худший: O(n*n), Лучший О(n)
     //Сортировка вставками. Необходима для сортировки
     void sort_insertion(size_t lo, size_t hi) {
         for (size_t i = lo + 1; i < hi; ++i) {
@@ -639,7 +689,7 @@ public:
             }
             m_data[j] = value;
         }
-        sorted = true;
+        m_sorted = true;
     }
 
     //Если массив пустой...
@@ -691,7 +741,7 @@ public:
             sort_quick(low, pi);
             sort_quick(pi + 1, high);
         }
-        sorted = true;
+        m_sorted = true;
     }
     //Слияние массивов
     void merge(size_t left, size_t mid, size_t right) {
@@ -730,8 +780,9 @@ public:
         std::copy(temp.begin(), temp.end(), m_data + left);
 
         // Обновление флага сортировки
-        sorted = false;
+        m_sorted = false;
     }
+    //Все случаи O(n log(n))
     //Сортировка слиянеим
     void sort_merge(size_t left, size_t right) {
         if (left < right) {
@@ -740,9 +791,9 @@ public:
             sort_merge(mid + 1, right);
             merge(left, mid, right);
         }
-        sorted = true;
+        m_sorted = true;
     }
-    //Сортировка. Если меньше миллиона значений, то быстрая, иначе слиянием
+    //Сортировка по возрастанию. Если меньше миллиона значений, то быстрая, иначе слиянием
     void sort()
     {
         if (size() < 1000000)
@@ -753,7 +804,7 @@ public:
         {
             sort_merge(0, size()-1);
         }
-        sorted = true;
+        m_sorted = true;
     }
 
 };
@@ -917,6 +968,10 @@ void test() {
     // Тестирование метода sort
     v1 = { 5, 3, 1, 2, 4 };
     v1.sort();
+    assert(v1 == VectorLegacy<int>({ 1, 2, 3, 4, 5 }));
+    v1.print();
+    v1 = { 1, 5 };
+    v1.insert(1, {2, 3, 4});
     v1.print();
     assert(v1 == VectorLegacy<int>({ 1, 2, 3, 4, 5 }));
 

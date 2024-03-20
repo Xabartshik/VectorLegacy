@@ -35,10 +35,10 @@ int main()
 	arr.sort();
 	for (size_t i = 0; i < arr.size() - 1; i++) {
 		if (arr[i] > arr[i + 1]) {
-			cout << "Хуево" << endl;
+			cout << "Плохо" << endl;
 		}
 	}
-	cout << "Заебца" << endl;
+	cout << "Хорошо" << endl;
 	arr.print();
 	return 0;
 
