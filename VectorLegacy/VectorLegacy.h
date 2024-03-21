@@ -141,7 +141,7 @@ private:
 
     // Функция для перемещения элементов влево
     void shift_left(size_t index, size_t count) {
-        if (index - count < 0)
+        if (index - count + 1 < 0)
         {
             throw(out_of_range("Not enough place to shift"));
         }
