@@ -4,7 +4,7 @@ int main()
 {
 	test();
 	VectorLegacy<int> arr(5,1);
-
+	VectorLegacy<string> arr3;
 	VectorLegacy<int> arr2(5, 1);
 	arr.print(); // 1 1 1 1 1
 
@@ -39,7 +39,8 @@ int main()
 		}
 	}
 	cout << "Хорошо" << endl;
-	arr.print();
+	arr3.push_back("Привет");
+	arr3.print();
 	return 0;
 
 }

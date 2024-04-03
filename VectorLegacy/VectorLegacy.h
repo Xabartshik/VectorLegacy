@@ -251,11 +251,11 @@ public:
         m_sorted = other.m_sorted;
 
         // Обнуление данных other
-        //other.sorted = false;
+        //other.m_sorted = false;
         //other.m_data = nullptr;
         //other.m_size = 0;
         //other.m_capacity = 0;
-        ~other;
+        other.~VectorLegacy();
     }
 
     //Оператор копирования
@@ -304,7 +304,7 @@ public:
             m_capacity = other.m_capacity;
             m_sorted = other.m_sorted;
 
-            ~other;
+            other.~VectorLegacy();
         }
         return *this;
     }
