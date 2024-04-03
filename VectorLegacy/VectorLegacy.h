@@ -243,7 +243,7 @@ public:
     }
 
     //Конструктор перемещения
-    VectorLegacy(VectorLegacy&& other) noexcept {
+    VectorLegacy(VectorLegacy&& other) {
         // Перемещение данных
         m_data = other.m_data;
         m_size = other.m_size;
@@ -251,11 +251,12 @@ public:
         m_sorted = other.m_sorted;
 
         // Обнуление данных other
-        //other.m_sorted = false;
-        //other.m_data = nullptr;
-        //other.m_size = 0;
-        //other.m_capacity = 0;
-        other.~VectorLegacy();
+        other.m_sorted = false;
+        other.m_data = nullptr;
+        other.m_size = 0;
+        other.m_capacity = 0;
+
+
     }
 
     //Оператор копирования
@@ -304,7 +305,11 @@ public:
             m_capacity = other.m_capacity;
             m_sorted = other.m_sorted;
 
-            other.~VectorLegacy();
+            // Обнуление данных other
+            other.m_sorted = false;
+            other.m_data = nullptr;
+            other.m_size = 0;
+            other.m_capacity = 0;
         }
         return *this;
     }
@@ -572,10 +577,11 @@ public:
     // Печать элементов
     void print() const {
         //Выводит последний элемент
+        cout << "[";
         for (size_t i = 0; i < m_size; ++i) {
-            cout << m_data[i] << " ";
+            cout << m_data[i] << ", ";
         }
-        cout << endl;
+        cout << "]" << endl;
     }
     //Средний: О(n)
     // Конвертация массива в строку
@@ -806,6 +812,8 @@ public:
         }
         m_sorted = true;
     }
+
+
 
 };
 
